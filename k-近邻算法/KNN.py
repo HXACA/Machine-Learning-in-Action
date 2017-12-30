@@ -1,5 +1,6 @@
 # -- coding: utf-8 --
 from numpy import *
+from os import listdir
 import operator
 
 def createDataSet():
@@ -105,3 +106,47 @@ def classifyPerson():
     print "You will probably like this person : ", resultList[classifierResult - 1]
     #输出结果
 
+def img2vector(filename):
+    #把32*32的二进制图像转为1*1024的向量
+    returnVect = zeros((1, 1024))
+    fr = open(filename)
+    for i in range(32):
+        lineStr = fr.readline()
+        #逐行读取
+        for j in range(32):
+            #print i, j, len(lineStr), int(lineStr[j])
+            returnVect[0, 32*i+j]=int(lineStr[j])
+            #强转int否则为字符
+    return returnVect
+
+def handwritingClassTest():
+    hwLabels = []
+    trainingFileList = listdir('trainingDigits')
+    #获取目录内容
+    m = len(trainingFileList)
+    #得到文件数量
+    trainMat = zeros((m, 1024))
+    for i in range(m):
+        fileNameStr = trainingFileList[i]
+        fileStr = fileNameStr.split('.')[0]
+        classNumStr = int(fileStr.split('_')[0])
+        #[0]表示取分割出的第一个
+        hwLabels.append(classNumStr)
+        trainMat[i, :]=img2vector('trainingDigits/%s' % fileNameStr)
+        #读该文件数据
+    testFileList = listdir('testDigits')
+    #读取测试集合
+    errorCount = 0
+    mTest = len(testFileList)
+    for i in range(mTest):
+        fileNameStr = testFileList[i]
+        fileStr = fileNameStr.split('.')[0]
+        classNumStr = int(fileStr.split('_')[0])
+        vectorUnderTest = img2vector('testDigits/%s' % fileNameStr)
+        ans = classify0(vectorUnderTest, trainMat, hwLabels, 3)
+        #使用k-近邻算法分类
+        print "the classfier came back with %d,the real number is : %d"\
+        % (ans, classNumStr)
+        if(ans != classNumStr): errorCount+=1
+    print "\nthe total number of errors is : %d" % errorCount
+    print "\nthe total rates of errors is : %f" % (errorCount/float(mTest))
