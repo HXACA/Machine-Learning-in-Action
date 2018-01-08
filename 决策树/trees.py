@@ -136,3 +136,5 @@ def solve(filename):
     lensesLabels=['age', 'prescript', 'astigmatic', 'tearRate']
     lensesTree = createTree(lenses,lensesLabels)
     storeTree(lensesTree,'lensesTree.txt')
+    return lenses
+

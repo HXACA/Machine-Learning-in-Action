@@ -27,7 +27,7 @@ def createPlot(inTree):
     #frameon为外边框
     #plotNode( U'决策节点', (0.5, 0.1), (0.1, 0.5), decisionNode)
     #plotNode( U'叶节点', (0.8, 0.1), (0.3, 0.8) , leafNode)
-    # #Unicode解码问题
+    #Unicode解码问题
     plotTree.totalW = float(getNumLeafs(inTree))
     plotTree.totalD = float(getTreeDepth(inTree))
     plotTree.xOff = -0.5/plotTree.totalW
