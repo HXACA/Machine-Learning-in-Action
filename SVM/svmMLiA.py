@@ -21,6 +21,7 @@ class opStruct:
         self.alphas = mat(zeros((self.m,1)))
         self.b = 0
         self.eCache = mat(zeros((self.m,2)))
+        #储存误差，保证每次选择Ei-Ej最大的alpha
         self.K = mat(zeros((self.m,self.m)))
         for i in range(self.m):
             self.K[:,i] = kernelTrans(self.X,self.X[i,:],kTup)
@@ -43,9 +44,11 @@ def openCVtest():
 def calcEK(oS,k):
     fXk = float(multiply(oS.alphas,oS.labelMat).T*oS.K[:,k]+oS.b)
     Ek = fXk-float(oS.labelMat[k])
+    #计算误差
     return Ek
 
 def selectJ(i,oS,Ei):
+    #启发式选择
     maxK = -1;maxDeltaE = 0;Ej = 0
     oS.eCache[i] = [1,Ei]
     validEcacheList = nonzero(oS.eCache[:,0].A)[0]
@@ -56,6 +59,7 @@ def selectJ(i,oS,Ei):
             deltaE = abs(Ei-Ek)
             if (deltaE>maxDeltaE):
                 maxK = k;maxDeltaE = deltaE;Ej = Ek
+            #寻找最大差值
         return maxK,Ej
     else:
         j=selectJrand(i,oS.m)
@@ -71,7 +75,9 @@ def kernelTrans(X,A,kTup):
     m,n = shape(X)
     K = mat(zeros((m,1)))
     if kTup[0]=='lin':K=X*A.T
+    #线性
     elif kTup[0]=='rbf':
+        #高斯核函数
         for j in range(m):
             deltaRow = X[j,:]-A
             K[j] = deltaRow*deltaRow.T
@@ -204,12 +210,14 @@ def smoP(dataMatIn,classLabels,C,toler,maxIter,kTup = ('lin',0)):
     while (iter<maxIter) and ((alphaPairsChanged>0) or (entireSet)):
         alphaPairsChanged=0
         if entireSet:
+            #遍历全部数据进行修改
             for i in range(oS.m):
                 alphaPairsChanged += innerL(i,oS)
                 print "fullSet,iter:%d i :%d , pairs changed %d" %(iter,i,alphaPairsChanged)
             iter+=1
         else:
             nonBoundIs = nonzero((oS.alphas.A>0) * (oS.alphas.A<C))[0]
+            #在非边界中选择，跳过不会改变的alpha
             for i in nonBoundIs:
                 alphaPairsChanged +=innerL(i,oS)
                 print "non-bound,iter:%d i:%d,pairs changed %d" %(iter,i,alphaPairsChanged)
@@ -237,6 +245,7 @@ def loadDataSet(fileName):
     return dataMat,labelMat
 
 def selectJrand(i,m):
+    #随机选择一个和i不同的j
     j=i
     while(j==i):
         j = int(random.uniform(0,m))
@@ -244,6 +253,7 @@ def selectJrand(i,m):
 
 
 def clipAlpha(aj,H,L):
+    #确保alpha数值在范围之中
     if aj>H:
         aj=H
     if L>aj:
@@ -274,7 +284,7 @@ def show(dataMatIn,classLabels,alphas):
 def smoSimple(dataMatIn,classLabels,C,toler,maxIter):
     #数据集，类别标签，常数C，容错率，迭代次数
     dataMatrix = mat(dataMatIn);labelMat = mat(classLabels).transpose()
-    #转为矩阵
+    #转为矩阵，将标签转置为列向量
     b=0;m,n = shape(dataMatrix)
     #获得矩阵大小
     alphas = mat(zeros((m,1)))
@@ -286,17 +296,19 @@ def smoSimple(dataMatIn,classLabels,C,toler,maxIter):
         for i in range(m):
             #对数据集中每一个向量
             fXi = float(multiply(alphas,labelMat).T*(dataMatrix*dataMatrix[i,:].T))+b
-            #multiply 矩阵乘法 .T 转置
+            #multiply 矩阵乘法 .T 转置，算出当前alpha下的预测结果
             Ei = fXi - float(labelMat[i])
+            #计算误差
             if((labelMat[i]*Ei < -toler) and (alphas[i]<C)) or ((labelMat[i]*Ei > toler) and (alphas[i]>0)):
-                #该数据向量可以被优化
+                #该数据向量可以被优化，因为误差较大且alpha不等于0,C,说明不在边界上
                 j = selectJrand(i,m)
                 #随机选择另外一个数据向量
                 fXj = float(multiply(alphas,labelMat).T*(dataMatrix*dataMatrix[j,:].T))+b
                 Ej = fXj - float(labelMat[j])
                 alphaIold = alphas[i].copy()
                 alphaJold = alphas[j].copy()
-                if (labelMat[i]!=labelMat[j]):
+                if (labelMat[i]!=labelMat[j]):#保证alpha在0和C之中
+                    #非同一类
                     L = max(0,alphas[j]-alphas[i])
                     H = min(C,C+alphas[j]-alphas[i])
                 else:
