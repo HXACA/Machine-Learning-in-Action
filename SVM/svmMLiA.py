@@ -113,6 +113,8 @@ def img2vector(filename):
     for i in range(32):
         lineStr = fr.readline()
         #逐行读取
+        lineStr=lineStr.replace(' ','')
+        #print lineStr
         for j in range(32):
             #print i, j, len(lineStr), int(lineStr[j])
             returnVect[0, 32*i+j]=int(lineStr[j])
