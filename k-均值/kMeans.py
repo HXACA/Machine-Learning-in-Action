@@ -76,6 +76,7 @@ def biKmeans(dataSet, k, distMeas=distEclud):
     clusterAssment = mat(zeros((m, 2)))
     #分配结果以及误差
     centroid0 = mean(dataSet, axis=0).tolist()[0]
+    print centroid0
     #按照列方向求均值并转为列表
     centList = [centroid0]
     #将所有的点作为一簇，储存所有的质心
@@ -177,3 +178,7 @@ def clusterClubs(numClust=5):
     ax1.scatter(myCentroids[:,0].flatten().A[0],\
                 myCentroids[:,1].flatten().A[0],marker='+',s=300)
     plt.show()
+
+
+dataMat3 = mat(loadDataSet('testSet2.txt'))
+centList,myNewAssments = biKmeans(dataMat3,3)
